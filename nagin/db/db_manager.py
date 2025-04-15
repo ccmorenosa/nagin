@@ -6,7 +6,6 @@ from qube.measurement.content import run_id_to_datafile
 # from pathlib import Path
 
 
-
 class DBManager():
     """Manager that opens and controls the database.
 
@@ -24,7 +23,7 @@ class DBManager():
         self, db_file=None,  run_id=None
     ):
         self.db_file = None
-        if db_file is None:
+        if db_file is not None:
             self.open_db(db_file)
 
         self.run = None
@@ -99,7 +98,7 @@ class DatabaseRun():
                 self.data[dataset] = self.df.get_dataset(dataset).value
                 print(
                     f"Dataset fetched: {dataset}. "
-                    "(Shape: {data[dataset].shape})"
+                    f"(Shape: {self.data[dataset].shape})"
                 )
             except KeyError:
                 print(
@@ -162,7 +161,7 @@ class DatabaseRun():
         elif isinstance(f_val, str):
             f_val = self.data[f_val]
 
-        return np.logical_and(i_val <= vals, f_val <= vals)
+        return np.logical_and(i_val <= vals, f_val >= vals)
 
     def __getitem__(self, dataset):
         """Get the desired set of the data.
