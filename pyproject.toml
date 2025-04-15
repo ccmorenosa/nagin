@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nagin"
+version = "0.0.1"
+dependencies = [
+    "numpy",
+    "matplotlib",
+    "scipy",
+    "PyQT6",
+    "qcodes",
+    "qube-qcodes",
+    "pretty_verbose",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["nagin*"]
+exclude = ["nagin.tests*"]
+namespaces = false
