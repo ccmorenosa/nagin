@@ -124,11 +124,11 @@ def PSD_fit(fr, PSD_data, PSD_0=None, **config):
 
     """
     if PSD_0 is None:
-        PSD_0 = 0
+        PSD_0 -= 0
 
     PSD_data -= PSD_0
 
-    mask_clean, d_PSD = derivative_peak_clean(
+    mask_clean = derivative_peak_clean(
         PSD_data, threshold=config.pop("threshold", 2.2e-15),
         repeat=config.pop("repeat", 1),
         second_der=config.pop("second_der", False)
@@ -143,6 +143,6 @@ def PSD_fit(fr, PSD_data, PSD_0=None, **config):
     )
 
     if config.pop("full_output", False):
-        return fr_clean, PSD_clean, d_PSD, popt
+        return mask_clean, fr_clean, PSD_clean, popt
 
     return mask_clean, popt
