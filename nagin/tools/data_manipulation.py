@@ -5,7 +5,7 @@ from scipy.optimize import curve_fit
 from nagin.tools.stats import lorentzian
 
 
-def fit_data(x_data, y_data, func, p0=None):
+def fit_data(x_data, y_data, func, **kwargs):
     """fit data to a given function and manage exception.
 
     Parameters
@@ -26,7 +26,9 @@ def fit_data(x_data, y_data, func, p0=None):
     # Try the fit.
     try:
 
-        popt, *_ = curve_fit(func, x_data, y_data, p0=p0)
+        popt, *_ = curve_fit(
+            func, x_data, y_data, **kwargs
+        )
 
         # If any value is nan, the fit was not successful.
         if (np.isnan(popt).any()):
@@ -123,6 +125,7 @@ def PSD_fit(fr, PSD_data, PSD_0=None, **config):
     `fit_data`.
 
     """
+    full_output = config.pop("full_output", False)
     if PSD_0 is None:
         PSD_0 -= 0
 
@@ -138,11 +141,10 @@ def PSD_fit(fr, PSD_data, PSD_0=None, **config):
     PSD_clean = PSD_data[mask_clean]
 
     popt = fit_data(
-        fr_clean, PSD_clean, config.pop("func", lorentzian),
-        config.pop("p0", None)
+        fr_clean, PSD_clean, config.pop("func", lorentzian), **config
     )
 
-    if config.pop("full_output", False):
+    if full_output:
         return mask_clean, fr_clean, PSD_clean, popt
 
     return mask_clean, popt
