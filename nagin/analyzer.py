@@ -3,7 +3,6 @@
 import hashlib
 import hmac
 import pickle
-from itertools import product
 
 import numpy as np
 from pretty_verbose import Logger
@@ -124,21 +123,6 @@ class NaginAnalyzer(DBManager):
 
         self.run["fr_ROI"] = self.run["frequencies"][mask]
         self.run["PSD_ROI"] = self.run["PSD_ch0"][mask]
-
-        if temperature:
-            self.run["T_ROI"] = self.run["actual_mxc_temperature"][mask]
-
-    def shot_noise_fits(self, axes=(), norm_ids=None):
-        """Run fits on the shot noise data at the given axes."""
-        fr = self.run["fr_ROI"]
-        PSD = self.run["PSD_ROI"]
-
-        axes_data = [
-            enumerate(self.run["axes"][ax]) for ax in axes
-        ]
-
-        for iteration in product(*axes_data):
-            pass
 
     def __getitem__(self, dataset):
         """Get the desired set of the data.
