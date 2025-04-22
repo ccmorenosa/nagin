@@ -26,6 +26,7 @@ class DBManager():
         if db_file is not None:
             self.open_db(db_file)
 
+        self.runs = {}
         self.run = None
         if run_id is not None:
             self.update_run(run_id)
@@ -51,10 +52,9 @@ class DBManager():
             Id of the initial database run to retrieve.
 
         """
-        if self.run is not None:
-            self.run.extract_data(run_id)
-        else:
-            self.run = DatabaseRun(run_id)
+        self.run = self.runs.get(run_id, None)
+        if self.run is None:
+            self.run = self.runs[run_id] = DatabaseRun(run_id)
 
         return self.run
 
