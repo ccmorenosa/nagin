@@ -9,6 +9,7 @@ from pretty_verbose import Logger
 from scipy.constants import e, h, k, physical_constants
 
 from nagin.db import DBManager
+from nagin.tools.stats import S_QPC_LC
 
 
 class NaginAnalyzer(DBManager):
@@ -34,6 +35,18 @@ class NaginAnalyzer(DBManager):
     e = e
     h = h
     k = k
+
+    S_defaults = {
+        "T": 13e-3,
+        "G": 483.6,
+        "S_A": 4*k,
+        "S_B": 8.3e-07,
+        "S_C": 3.5e-14,
+        "alpha": 1,
+        "L": 2.2e-6,
+        "C": 182e-12,
+        "Rp": 1.5,
+    }
 
     def __init__(self, working_dir, db_file, run_id=None, **kwargs):
         self.working_dir = working_dir
@@ -123,6 +136,25 @@ class NaginAnalyzer(DBManager):
 
         self.run["fr_ROI"] = self.run["frequencies"][mask]
         self.run["PSD_ROI"] = self.run["PSD_ch0"][mask]
+
+    def get_fitting_func(self, *default_vars):
+        """Get a function to fit according the defaults variables."""
+        S_fix_args = {}
+        S_args = []
+
+        for var, value in self.S_defaults.items():
+            if var in default_vars:
+                S_fix_args[var] = value
+            else:
+                S_args.append(var)
+
+        def S_fit(f, Rqpc, *args):
+            for i, arg in enumerate(args):
+                S_fix_args[S_args[i]] = arg
+
+            return S_QPC_LC(f, Rqpc=Rqpc, **S_fix_args)
+
+        return S_fit
 
     def __getitem__(self, dataset):
         """Get the desired set of the data.
