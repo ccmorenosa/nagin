@@ -149,7 +149,11 @@ class DatabaseRun():
             dict.
 
         """
-        vals = self.data[dataset]
+
+        if isinstance(dataset, str):
+            vals = self.data[dataset]
+        else:
+            vals = dataset
 
         if i_val is None:
             i_val = vals.min()
