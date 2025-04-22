@@ -95,17 +95,17 @@ class NaginAnalyzer(DBManager):
 
         return pickle.dumps(pickled_data)
 
-    def pinch_off_preconfig(self, dc=False):
+    def pinch_off_preconfig(self, dc=False, R_amp=1e6):
         """Configure data to work for shot noise."""
         self.run.check_datasets(
             ["a1_x", "a1_y", "a1_r"] + (["a1_dc"] if dc else [])
         )
 
         # Factor due to the lock-in (squared signal to sine).
-        sqr_sin_factor = np.sqrt(2) / np.pi / 1e6
-        self.run.scale_dataset("a1_x", sqr_sin_factor)
-        self.run.scale_dataset("a1_y", sqr_sin_factor)
-        self.run.scale_dataset("a1_r", sqr_sin_factor)
+        sqr_sin_factor = np.sqrt(2) / np.pi / R_amp
+        self.run["x"] = self.run.scale_dataset("a1_x", sqr_sin_factor)
+        self.run["y"] = self.run.scale_dataset("a1_y", sqr_sin_factor)
+        self.run["r"] = self.run.scale_dataset("a1_r", sqr_sin_factor)
 
     def shot_noise_preconfig(self, fr_start=0, fr_end=None, temperature=False):
         """Configure data to work for shot noise."""

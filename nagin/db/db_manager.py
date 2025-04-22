@@ -218,4 +218,4 @@ class DatabaseRun():
             Factor to increment the dataset.
 
         """
-        self.data[dataset] *= factor
+        return self.data[dataset] * factor
