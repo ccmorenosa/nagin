@@ -13,6 +13,7 @@ dependencies = [
     "qcodes",
     "qube-qcodes",
     "pretty_verbose",
+    "pint",
 ]
 
 [tool.setuptools.packages.find]

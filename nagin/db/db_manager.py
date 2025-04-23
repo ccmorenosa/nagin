@@ -1,9 +1,12 @@
 """Main class for the management of the database ant datasets."""
 import numpy as np
+import pint
+from pint import UnitRegistry, set_application_registry
 from qcodes import initialise_or_create_database_at
 from qube.measurement.content import run_id_to_datafile
 
-# from pathlib import Path
+ureg = UnitRegistry()
+set_application_registry(ureg)
 
 
 class DBManager():
@@ -70,8 +73,17 @@ class DatabaseRun():
     """
 
     def __init__(self, run_id, **kwargs):
+        self.ureg = pint.get_application_registry()
+        self.Q_ = self.ureg.Quantity
+
         self.run_id = run_id
         self.extract_data(run_id, **kwargs)
+
+    def parse_unit(self, unit):
+        """Parse units to avoid error with a.u."""
+        if unit == "a.u.":
+            unit = "dimensionless"
+        return self.ureg(unit).units
 
     def extract_data(self, run_id, **kwargs):
         """Get the data from the database.
@@ -91,13 +103,16 @@ class DatabaseRun():
 
         axes = self.df[0].axes
 
-        self.data = {"axes": {ax.name: ax.value for ax in axes}}
+        self.data = {"axes": {
+            ax.name: ax.value * self.parse_unit(ax.unit) for ax in axes
+        }}
 
         for dataset in kwargs.pop("datasets", self.df.ds_names):
             try:
-                self.data[dataset] = self.df.get_dataset(dataset).value
+                ds = self.df.get_dataset(dataset)
+                self.data[dataset] = ds.value * self.parse_unit(ds.unit)
                 print(
-                    f"Dataset fetched: {dataset}. "
+                    f"Dataset fetched: {dataset} [{ds.unit}]. "
                     f"(Shape: {self.data[dataset].shape})"
                 )
             except KeyError:
@@ -164,6 +179,11 @@ class DatabaseRun():
             f_val = vals.max()
         elif isinstance(f_val, str):
             f_val = self.data[f_val]
+
+        if not isinstance(i_val, self.Q_):
+            i_val *= self.Q_(vals).units
+        if not isinstance(f_val, self.Q_):
+            f_val *= self.Q_(vals).units
 
         return np.logical_and(i_val <= vals, f_val >= vals)
 

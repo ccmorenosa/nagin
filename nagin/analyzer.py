@@ -11,6 +11,9 @@ from scipy.constants import e, h, k, physical_constants
 from nagin.db import DBManager
 from nagin.tools.stats import S_QPC_LC
 
+ureg = pint.get_application_registry()
+Q_ = ureg.Quantity
+
 
 class NaginAnalyzer(DBManager):
     """Data processing and analyzing class.
@@ -30,22 +33,23 @@ class NaginAnalyzer(DBManager):
 
     """
 
-    G0 = physical_constants["conductance quantum"][0]
+    G0 = physical_constants["conductance quantum"][0] * ureg("S")
     R0 = 1/G0
-    e = e
-    h = h
-    k = k
+    e = e * ureg("C")
+    h = h * ureg("J Hz^-1")
+    k = k * ureg("J K^-1")
 
     S_defaults = {
-        "T": 13e-3,
+        "T": 13e-3 * ureg("K"),
         "G": 483.6,
         "S_A": 4*k,
-        "S_B": 8.3e-07,
-        "S_C": 3.5e-14,
+        "S_B": 8.3e-07 * ureg("V^2"),
+        "S_C": 3.5e-14 * ureg("V^2 Hz^-1"),
         "alpha": 1,
-        "L": 2.2e-6,
-        "C": 182e-12,
-        "Rp": 1.5,
+        "Rqpc": R0,
+        "L": 2.2e-6 * ureg("H"),
+        "C": 182e-12 * ureg("F"),
+        "Rp": 1.5 * ureg("ohm"),
     }
 
     def __init__(self, working_dir, db_file, run_id=None, **kwargs):
@@ -62,6 +66,10 @@ class NaginAnalyzer(DBManager):
         self.__key = None
         if kwargs.get("key", None) is not None:
             self.load_key(kwargs.pop("key"))
+
+    def get_ureg(self):
+        """Return the units registry for the application."""
+        return pint.get_application_registry()
 
     def load_key(self, key_file):
         """Load a key."""
