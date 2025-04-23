@@ -5,6 +5,7 @@ import hmac
 import pickle
 
 import numpy as np
+import pint
 from pretty_verbose import Logger
 from scipy.constants import e, h, k, physical_constants
 
@@ -126,6 +127,63 @@ class NaginAnalyzer(DBManager):
         self.run["x"] = self.run.scale_dataset("a1_x", sqr_sin_factor)
         self.run["y"] = self.run.scale_dataset("a1_y", sqr_sin_factor)
         self.run["r"] = self.run.scale_dataset("a1_r", sqr_sin_factor)
+
+    def compute_pinchoff_curve(
+        self, v_qpc="V_qpc1", v_biases=None, v_bias_type="array",
+        **kwargs
+    ):
+        """Compute the pinch-off curve.
+
+        Parameters
+        ----------
+        v_qpc: Str.
+            Name of the axis with the V_qpc.
+
+        v_biases: Str | Array | Integer.
+            Value of the v_bias.
+
+        v_bias_type: "index" | "value" | "array".
+            Type of v_biases.
+
+        """
+        def compute_G(r_val, v_bias_val, r0):
+            return r_val/(-v_bias_val*1e-3*(1-r_val/r0))
+
+        # Getting data.
+        r = kwargs.pop("r", self.run["r"])
+
+        if isinstance(v_qpc, str):
+            v_qpc = self.run["axes"][v_qpc]
+
+        ROI = self.run.get_interval_roi(
+            v_qpc, kwargs.pop("min_Vqpc", -1.99), kwargs.pop("max_Vqpc", -0.9)
+        )
+
+        if v_bias_type == "array":
+            if isinstance(v_biases, str):
+                v_biases = self.run["axes"][v_biases]
+
+            pinch_off_Vqpc = np.empty((len(v_biases), len(v_qpc[ROI])))
+            pinch_off_G = np.empty((len(v_biases), len(v_qpc[ROI])))
+
+            for index, v_bias in enumerate(v_biases):
+                pinch_off_Vqpc[index] = v_qpc[ROI]
+                pinch_off_G[index] = compute_G(
+                    r[ROI, index], v_bias, r[-1, index]
+                )
+
+        elif v_bias_type == "value":
+            pinch_off_Vqpc = np.array(v_qpc[ROI])
+            pinch_off_G = np.array(compute_G(r[ROI], v_biases, r[-1]))
+
+        pinch_off_Vqpc = pinch_off_Vqpc * v_qpc[ROI].units
+        pinch_off_G = pinch_off_G * ureg("S")
+
+        self.run["po_Vqpc"] = pinch_off_Vqpc
+        self.run["po_G"] = pinch_off_G
+        self.run["po_G_G0"] = pinch_off_G / self.G0
+        self.run["po_R"] = 1 / pinch_off_G
+        self.run["po_R_R0"] = self.R0 / pinch_off_G
 
     def shot_noise_preconfig(self, fr_start=0, fr_end=None, temperature=False):
         """Configure data to work for shot noise."""
