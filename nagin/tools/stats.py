@@ -1,6 +1,12 @@
 """Statistic and distribution functions."""
 import numpy as np
+import pint
 from scipy.constants import k
+
+ureg = pint.get_application_registry()
+Q_ = ureg.Quantity
+
+k = k * ureg("J K^-1")
 
 
 def lorentzian(x, x0, gamma, a):
@@ -179,8 +185,13 @@ def S(f, T, G, S_A, S_B, S_C, alpha, Z, *zargs):
         Arguments of Z.
 
     """
-    Z_eq = np.real(Z(f, *zargs))
-    return (4 * k * T + S_A) * Z_eq * G**2 + S_B/f**alpha + S_C
+    Z_complex = Z(f, *zargs)
+    if isinstance(Z_complex, Q_):
+        Z_eq = np.real(Z_complex.m) * Z_complex.u
+        return (4 * k * T + S_A) * Z_eq * G**2 + S_B/f**alpha + S_C
+
+    Z_eq = np.real(Z_complex)
+    return (4 * k.m * T + S_A) * Z_eq * G**2 + S_B/f**alpha + S_C
 
 
 def Z_QPC_LC(f, Rqpc, L=2.2e-6, C=400e-12, Rp=2):
