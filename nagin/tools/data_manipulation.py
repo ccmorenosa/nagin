@@ -1,8 +1,12 @@
 """Functions for data manipulation and fitting."""
 import numpy as np
 from scipy.optimize import curve_fit
+import pint
 
 from nagin.tools.stats import lorentzian
+
+ureg = pint.get_application_registry()
+Q_ = ureg.Quantity
 
 
 def fit_data(x_data, y_data, func, **kwargs):
@@ -83,6 +87,7 @@ def derivative_peak_clean(vals, threshold=2.2e-15, repeat=1, second_der=False):
         Value of the cut for the peaks in the derivative.
 
     """
+    vals = Q_(vals).m
     mask = np.ones(len(vals), dtype=bool)
     for _ in range(repeat):
         d_vals = center_derivative(vals.copy())
