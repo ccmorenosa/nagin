@@ -37,7 +37,7 @@ class NaginAnalyzer(DBManager):
     """
 
     G0 = physical_constants["conductance quantum"][0] * ureg("S")
-    R0 = 1/G0
+    R0 = (1/G0).to("ohm")
     e = e * ureg("C")
     h = h * ureg("J Hz^-1")
     k = k * ureg("J K^-1")
